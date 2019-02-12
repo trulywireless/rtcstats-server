@@ -21,6 +21,28 @@ const Store = require('./store')({
 let server;
 const tempPath = 'temp';
 
+function calcStoreKey(clientid, data) {
+    const lines = data.split('\n');
+    const identifyLine = lines.find( line => {
+        const data = JSON.parse(line);
+        return data[0] === "identify";
+    });
+
+    //if there's identify information we use it
+    //otherwise we just use the clientid
+    if (identifyLine) {
+        console.log("Found an identify line: %s", identifyLine);
+        const identify = JSON.parse(identifyLine);
+        const identifyData = identify[2];
+        const callId = identifyData["call_id"];
+
+        return (callId === undefined) ? clientid : callId;
+    } else {
+        console.log("No identify found using client id: %s", clientid);
+        return clientid;
+    }
+}
+
 class ProcessQueue {
     constructor() {
         this.maxProc = os.cpus().length;
@@ -53,7 +75,9 @@ class ProcessQueue {
                 fs.unlink(tempPath + '/' + clientid, () => {
                     // we're good...
                 });
-                Store.put(clientid, data);
+
+                const key = calcStoreKey(clientid, data);
+                Store.put(key, data);
             });
         });
         p.on('message', (msg) => {
@@ -118,16 +142,10 @@ function run(keys) {
 
         const ua = upgradeReq.headers['user-agent'];
         const clientid = uuid.v4();
-        let tempStream = fs.createWriteStream(tempPath + '/' + clientid);
-        tempStream.on('finish', () => {
-            if (numberOfEvents > 0) {
-                q.enqueue(clientid);
-            } else {
-                fs.unlink(tempPath + '/' + clientid, () => {
-                    // we're good...
-                });
-            }
-        });
+        let peerConnectionId = null;
+        let locationData = null;
+
+        let tempStream = null;
 
         const meta = {
             path: upgradeReq.url,
@@ -136,21 +154,17 @@ function run(keys) {
             userAgent: ua,
             time: Date.now()
         };
-        tempStream.write(JSON.stringify(meta) + '\n');
 
         const forwardedFor = upgradeReq.headers['x-forwarded-for'];
         if (forwardedFor) {
             process.nextTick(() => {
                 const city = cityLookup.get(forwardedFor);
-                if (tempStream) {
-                    tempStream.write(JSON.stringify({
-                        0: 'location',
-                        1: null,
-                        2: city,
-                        time: Date.now()
-                        }) + '\n'
-                    );
-                }
+                locationData = {
+                    0: 'location',
+                    1: null,
+                    2: city,
+                    time: Date.now()
+                };
             });
         }
 
@@ -158,7 +172,42 @@ function run(keys) {
 
         client.on('message', msg => {
             const data = JSON.parse(msg);
+
+            if (!tempStream || (data[0] === 'create' && data[1] !== peerConnectionId)) {
+                //close existing stream
+                if (tempStream) {
+                    tempStream.end();
+                }
+
+                console.log("Creating a new file no filestream or new peer connection detected: " + peerConnectionId);
+
+                peerConnectionId = data[1];
+                //create a temp file if this is a new peer connection
+                tempStream = fs.createWriteStream(tempPath + '/' + clientid + '-' + peerConnectionId);
+                numberOfEvents = 0;
+
+                tempStream.on('finish', () => {
+                    if (numberOfEvents > 0) {
+                        console.log("Enqueuing processing of " + clientid + '-' + peerConnectionId);
+                        q.enqueue(clientid + '-' + peerConnectionId);
+                    } else {
+                        console.log("No events NOT enqueuing processing of " + clientid + '-' + peerConnectionId);
+                        fs.unlink(tempPath + '/' + clientid + '-' + peerConnectionId, () => {
+                            // we're good...
+                        });
+                    }
+                });
+
+                tempStream.write(JSON.stringify(meta) + '\n');
+
+                if (locationData) {
+                    tempStream.write(JSON.stringify(locationData) + '\n'
+                    );
+                }
+            }
+
             numberOfEvents++;
+
             switch(data[0]) {
             case 'getUserMedia':
             case 'getUserMediaOnSuccess':
@@ -178,7 +227,9 @@ function run(keys) {
         });
 
         client.on('close', () => {
-            tempStream.end();
+            if (tempStream) {
+                tempStream.end();
+            }
             tempStream = null;
         });
     });
