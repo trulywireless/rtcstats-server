@@ -21,7 +21,7 @@ module.exports = function(config) {
             if (err) {
               console.log("Error uploading data: ", err);
             } else {
-              console.log("Successfully uploaded data to myBucket/myKey");
+              console.log("Successfully uploaded data to bucket: %s, key: %s", config.s3.bucket, key);
             }
           });
         }
