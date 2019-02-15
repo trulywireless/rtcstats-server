@@ -14,8 +14,14 @@ const cityLookup = maxmind.open('./GeoLite2-City.mmdb');
 const Database = require('./database')({
     firehose: config.get('firehose'),
 });
+
+const s3Config = {
+    region: process.env.AWS_REGION,
+    bucket: process.env.STORAGE_BUCKET
+};
+
 const Store = require('./store')({
-  s3: config.get('s3'),
+  s3: s3Config
 });
 
 let server;
@@ -119,7 +125,10 @@ function run(keys) {
       }, () => { });
     }
 
-    server.listen(config.get('server').port);
+    const port = process.env.PORT;
+    console.log("Starting on port %s, bucket is: %s", port, s3Config.bucket);
+
+    server.listen(port);
     server.on('request', (request, response) => {
         // look at request.url
         switch (request.url) {
@@ -168,7 +177,7 @@ function run(keys) {
             });
         }
 
-        console.log('connected', ua, referer, clientid);
+        console.log('New connection from', ua, referer, clientid);
 
         client.on('message', msg => {
             const data = JSON.parse(msg);
