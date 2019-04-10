@@ -30,8 +30,13 @@ const tempPath = 'temp';
 function calcStoreKey(clientid, data) {
     const lines = data.split('\n');
     const identifyLine = lines.find( line => {
-        const data = JSON.parse(line);
-        return data[0] === "identify";
+        try {
+            const data = JSON.parse(line);
+            return data[0] === "identify";
+        } catch (error) {
+            //Line wasn't json...
+            return false;
+        }
     });
 
     //if there's identify information we use it
