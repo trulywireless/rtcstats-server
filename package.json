@@ -6,7 +6,7 @@
   "scripts": {
     "test": "eslint *.js && node test/client.js",
     "start": "NODE_ENV=production node app.js",
-    "postinstall": "aws s3 cp s3://$CONFIG_BUCKET_NAME/assets/GeoLite2/GeoLite2-City_20180703/GeoLite2-City.mmdb"
+    "postinstall": "aws s3 cp s3://truly-internal/ops/packages/GeoLite2-City.mmdb ."
   },
   "repository": {
     "type": "git",
