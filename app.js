@@ -108,14 +108,22 @@ var q = new ProcessQueue();
 
 function setupWorkDirectory() {
     try {
-        fs.readdirSync(tempPath).forEach(fname => {
-            fs.unlinkSync(tempPath + '/' + fname);
-        });
-        fs.rmdirSync(tempPath);
-    } catch(e) {
-        console.error('work dir does not exist');
+        if (fs.existsSync(tempPath)) {
+            fs.readdirSync(tempPath).forEach(fname => {
+                try {
+                    logger.debug('Removing file ' + tempPath + '/' + fname);
+                    fs.unlinkSync(tempPath + '/' + fname);
+                } catch (e) {
+                    logger.error('Error while unlinking file ' + fname + ' - ' + e.message);
+                }
+            });
+        } else {
+            logger.debug('Creating working dir ' + tempPath)
+            fs.mkdirSync(tempPath);
+        }
+    } catch (e) {
+        logger.error('Error while accessing working dir ' + tempPath + ' - ' + e.message);
     }
-    fs.mkdirSync(tempPath);
 }
 
 function run(keys) {
