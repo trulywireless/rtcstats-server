@@ -556,7 +556,7 @@ module.exports = {
     // TODO: edge, mobile platforms?
     browserType: function(client, peerConnectionLog) {
         var peerConnectionConfig = getPeerConnectionConfig(peerConnectionLog);
-        return 'browserType' in peerConnectionConfig ? peerConnectionConfig.browserType : 'unknown';
+        return (peerConnectionConfig && peerConnectionConfig.browserType) || 'unknown';
     },
 
     // the remote platform, extracted from the remote description.
