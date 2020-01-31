@@ -6,7 +6,7 @@
   "scripts": {
     "test": "eslint *.js && node test/client.js",
     "start": "NODE_ENV=production node app.js",
-    "postinstall": "wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz && gunzip GeoLite2-City.mmdb.gz"
+    "postinstall": "aws s3 cp s3://truly-internal/ops/packages/GeoLite2-City.mmdb ."
   },
   "repository": {
     "type": "git",

@@ -18,7 +18,7 @@ module.exports = function(config) {
     AWS.config = config.firehose;
     firehose = new AWS.Firehose();
   } else {
-    console.warn('No Firehose configuration present.  Skipping firehose storage.')
+    console.log('No Firehose configuration present. Skipping firehose storage.')
   }
 
   return {

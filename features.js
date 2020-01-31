@@ -162,7 +162,7 @@ function extractCentralMomentFromAudioStat(peerConnectionLog, statName, order) {
 
 // extract the codec used. Has to happen after the connection is up and packets have
 // been received or sent.
-function getCodec(peerConnectionLog, kind, direction) { 
+function getCodec(peerConnectionLog, kind, direction) {
     var codecName;
     var connected = false;
     for (var i = 0; i < peerConnectionLog.length; i++) {
@@ -556,7 +556,7 @@ module.exports = {
     // TODO: edge, mobile platforms?
     browserType: function(client, peerConnectionLog) {
         var peerConnectionConfig = getPeerConnectionConfig(peerConnectionLog);
-        return peerConnectionConfig.browserType || 'unknown';
+        return (peerConnectionConfig && peerConnectionConfig.browserType) || 'unknown';
     },
 
     // the remote platform, extracted from the remote description.
@@ -838,7 +838,7 @@ module.exports = {
                     if (report.type === 'ssrc' && (report.kind === 'video' || report.mediaType === 'video') && report.googFrameWidthReceived) {
                         let width = parseInt(report.googFrameWidthReceived, 10);
                         if (width > 0) {
-                            timeReceived = new Date(peerConnectionLog[i].time).getTime(); 
+                            timeReceived = new Date(peerConnectionLog[i].time).getTime();
                         }
                     }
                 });
