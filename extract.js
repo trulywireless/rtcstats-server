@@ -73,7 +73,7 @@ function generateFeatures(url, client, clientid) {
             if (features[fname].length === 2) {
                 let feature = features[fname].apply(null, [client, conn]);
                 if (feature !== undefined) {
-                    if (typeof feature === 'object' && Object.keys(feature).length > 0) {
+                    if (feature !== null && Object.keys(feature).length > 0) {
                         Object.keys(feature).forEach(subname => {
                             feature[subname] = safeFeature(feature[subname]);
                             if (!isProduction) {
