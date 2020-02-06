@@ -40,6 +40,11 @@ function determineBrowserFromOLine(sdp) {
 function gatheringTimeTURN(protocol, client, peerConnectionLog) {
     var peerConnectionConfig = getPeerConnectionConfig(peerConnectionLog);
     var typepref;
+
+    if (!peerConnectionConfig.browserType) {
+      peerConnectionConfig.browserType = 'unknown';
+    }
+
     switch(peerConnectionConfig.browserType) {
     case 'webkit':
         typepref = {
