@@ -41,7 +41,7 @@ function gatheringTimeTURN(protocol, client, peerConnectionLog) {
     var peerConnectionConfig = getPeerConnectionConfig(peerConnectionLog);
     var typepref;
 
-    if (!peerConnectionConfig.browserType) {
+    if (peerConnectionConfig === undefined || !peerConnectionConfig.browserType) {
       peerConnectionConfig.browserType = 'unknown';
     }
 
